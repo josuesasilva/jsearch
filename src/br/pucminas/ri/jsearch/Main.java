@@ -24,6 +24,21 @@ public class Main {
      */
     public static void main(String[] args) {
         Date start = new Date();
+        String userQuery = new String();
+
+        if (args.length > 1 && args[0].equals("-q")) {
+            if (args.length > 2) {
+                for (int i = 1; i < args.length; i++) {
+                    if (i == args.length - 2) {
+                        userQuery += args[i];
+                    } else {
+                        userQuery = userQuery + " " + args[i] + " ";
+                    }
+                }
+            } else {
+                userQuery = args[1];
+            }
+        }
 
         final File docDir = new File(Constants.DOCS_PATH);
         if (!docDir.exists() || !docDir.canRead()) {
@@ -47,17 +62,17 @@ public class Main {
             }
 
             Date end = new Date();
-            System.out.println("\nIndex time :" + (end.getTime() - start.getTime() + 
-                    " total milliseconds\n"));
-            
-            String userQuery = "test";
+            System.out.println("\nIndex time :" + (end.getTime() - start.getTime()
+                    + " total milliseconds\n"));
+
+            userQuery = userQuery.isEmpty() ? "test" : userQuery;
             System.out.println("Query: " + userQuery);
-            start  = new Date();
+            start = new Date();
             Searcher.search(userQuery);
-            end  = new Date();
-            
-            System.out.println("\nSearch time :" + (end.getTime() - start.getTime() + 
-                    " total milliseconds"));
+            end = new Date();
+
+            System.out.println("\nSearch time :" + (end.getTime() - start.getTime()
+                    + " total milliseconds"));
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
