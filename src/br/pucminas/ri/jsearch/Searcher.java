@@ -37,9 +37,6 @@ public class Searcher {
 
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = indexSearcher.doc(scoreDoc.doc);
-//                System.out.println("Name " + document.get(Constants.FILE_NAME));
-//                System.out.println("Found at filePath " + document.get(Constants.FILE_PATH));
-//                System.out.println("Content " + document.get(Constants.FILE_CONTENT));
             }
 
         } catch (IOException | ParseException e) {
