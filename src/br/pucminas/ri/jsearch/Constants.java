@@ -7,7 +7,8 @@ package br.pucminas.ri.jsearch;
  */
 public class Constants {
     public static final String INDEX_PATH = "index";
-    public static String DOCS_PATH = "docs";    
+    public static String DOCS_PATH = "docs";
+    public static String RESULT_PATH = "release";    
     public static int MAX_SEARCH = 10;
     public static final String FILE_NAME = "filename";
     public static final String FILE_PATH = "filepath";
