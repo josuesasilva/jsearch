@@ -10,6 +10,7 @@ RI Challenge - http://www.wladmirbrandao.com/course/cs-bsc-irs_RIChallenge_20160
 * Linux or Mac OSX
 * OpenJDK 1.8+ or Oracle JDK 1.8+
 
+
 ### Run
 
 Put data inside "docs" folder in project root.
@@ -33,4 +34,7 @@ $ java -jar jsearch.jar -f queriesFile
 
 Inside release folder contains Trec Eval binary and results for all supported IR models.
 
+### Build
+
+Load project with with Netbeans IDE.
 
