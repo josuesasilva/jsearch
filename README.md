@@ -18,5 +18,19 @@ Put data inside "docs" folder in project root.
 $ git clone https://github.com/josuesasilva/jsearch.git
 $ cd jsearch
 $ mkdir docs # put collection here
+```
+
+```sh
 $ java -jar jsearch.jar -q userquery
 ```
+or
+
+```sh
+$ java -jar jsearch.jar -f queriesFile
+```
+
+### Results
+
+Inside release folder contains Trec Eval binary and results for all supported IR models.
+
+
