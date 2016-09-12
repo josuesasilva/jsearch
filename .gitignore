@@ -4,6 +4,5 @@ nbbuild/
 dist/
 nbdist/
 index/
-docs/*
 nbactions.xml
 .nb-gradle/

@@ -200,7 +200,7 @@ public class Main {
             } else if (!queriesFile.isEmpty()) {
                 HashMap<String, String> queries = getQueriesFromFile(queriesFile);
                 Searcher.search(queries, RankingEnum.BM25);
-                //Searcher.search(queries, RankingEnum.ROCCHIO);
+                Searcher.search(queries, RankingEnum.ROCCHIO);
             } else {
                 System.exit(1);
             }
