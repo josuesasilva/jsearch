@@ -9,8 +9,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
 
 /**
  *
@@ -60,17 +62,26 @@ public class DocumentReader implements Iterator<Document> {
                 Matcher m = docNoTag.matcher(line);
                 if (m.find()) {
                     String docno = m.group(1);
-                    doc.add(new StringField("docno", docno, Field.Store.YES));
+                    doc.add(new StringField(Constants.DOC_TITLE, 
+                            docno, Field.Store.YES));
                 }
 
                 sb.append(line);
             }
             if (sb.length() > 0) {
-                doc.add(new TextField("contents", sb.toString(), Field.Store.NO));
+                FieldType type = new FieldType();
+                type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+                type.setStored(true);
+                type.setStoreTermVectors(true);
+//                doc.add(new TextField(Constants.DOC_CONTENT,
+//                        sb.toString(), Field.Store.YES));
+                doc.add(new Field(Constants.DOC_CONTENT, sb.toString(), type));
+
             }
 
         } catch (Exception e) {
             doc = null;
+            System.err.println(e);
         }
         return doc;
     }

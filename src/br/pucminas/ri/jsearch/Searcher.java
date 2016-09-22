@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -77,14 +78,18 @@ public class Searcher {
             Directory directory = FSDirectory.open(path);
             IndexReader indexReader = DirectoryReader.open(directory);
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            QueryParser queryParser = new QueryParser("contents", new StandardAnalyzer());
+            Analyzer analyzer = new StandardAnalyzer();
+            QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
             String rankingName = new String();
 
-            Query query = queryParser.parse(text);
+            RocchioQuery rq = null;
 
             switch (ranking) {
                 case ROCCHIO:
                     rankingName = "Rocchio";
+                    RocchioQueryExpansion exp = 
+                            new RocchioQueryExpansion(indexReader, indexSearcher, queryParser);
+                    rq = exp.expandQuery(qid, text);
                     break;
                 case BM25:
                     rankingName = "BM25";
@@ -94,9 +99,12 @@ public class Searcher {
                     break;
             }
 
+            Query query = rq != null ? queryParser.parse(rq.getQuery()) : 
+                    queryParser.parse(text);
+            
             TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
             ScoreDoc[] hits = topDocs.scoreDocs;
-
+            
             int i = 0;
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = indexSearcher.doc(scoreDoc.doc);

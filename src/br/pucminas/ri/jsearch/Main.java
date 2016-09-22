@@ -8,11 +8,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -23,6 +29,7 @@ import org.apache.lucene.store.FSDirectory;
 public class Main {
 
     private static String[] getUserParam(String[] args) {
+        
         String[] param = new String[2];
 
         if (args.length > 1 && args[0].equals("-q")) {

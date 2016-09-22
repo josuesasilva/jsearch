@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 josue
+ * Copyright (C) 2016 793604
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,36 @@
  */
 package br.pucminas.ri.jsearch;
 
-import org.apache.lucene.search.Query;
-
 /**
  *
  * @author josue
  */
-public class QueryParser {
+public class RocchioQuery {
+    
+    private String qId;
+    private String query;
 
-    Query parse(String text) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public RocchioQuery(String qId, String query) {
+        this.qId = qId;
+        this.query = query;
     }
+
+    public String getqId() {
+        return qId;
+    }
+
+    public void setqId(String qId) {
+        this.qId = qId;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+    
+    
     
 }
