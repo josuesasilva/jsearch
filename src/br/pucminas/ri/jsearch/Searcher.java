@@ -1,5 +1,7 @@
 package br.pucminas.ri.jsearch;
 
+import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
+import br.pucminas.ri.jsearch.queryexpansion.RocchioQuery;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
