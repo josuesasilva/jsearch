@@ -59,17 +59,15 @@ public class RocchioQueryExpansion {
 
     private final int MAX_DOCS = 10;
     private final int TERMS_LIMIT = 10;
-    private final float BETA = 0.75f;
+    private final float BETA = 0.8f;
     private final float ALPHA = 1.0f;
 
     private final IndexSearcher indexSeacher;
     private final IndexReader indexReader;
     private final QueryParser queryParser;
     private final ArrayList<Document> relevatDocuments;
-    private ArrayList<Integer> documentsIds;
 
     public RocchioQueryExpansion(IndexReader indexReader, IndexSearcher indexSeacher, QueryParser queryParser) {
-        documentsIds = new ArrayList<>();
         relevatDocuments = new ArrayList<>();
         this.indexSeacher = indexSeacher;
         this.queryParser = queryParser;
@@ -103,7 +101,7 @@ public class RocchioQueryExpansion {
             Collections.sort(termsVector, new Comparator<Entry<String, Double>>() {
                 @Override
                 public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
-                    return o1.getValue().compareTo(o2   .getValue());
+                    return o1.getValue().compareTo(o2.getValue());
                 }
             });
             Collections.reverse(termsVector);
@@ -114,7 +112,7 @@ public class RocchioQueryExpansion {
                 rocchioTerms.append(' ').append(termsVector.get(i).getKey());
             }
             
-            return new RocchioQuery(qId, rocchioTerms.toString());
+            return new RocchioQuery(qId, rocchioTerms.toString().trim());
 
         } catch (LockObtainFailedException ex) {
             Logger.getLogger(RocchioQueryExpansion.class.getName())
@@ -129,7 +127,6 @@ public class RocchioQueryExpansion {
 
     private void loadTopDocs(String strQuery) {
         Query query = null;
-        ArrayList<Integer> docs = new ArrayList<>();
 
         try {
             query = queryParser.parse(strQuery);
@@ -158,7 +155,6 @@ public class RocchioQueryExpansion {
                     }
 
                     if (doc != null) {
-                        docs.add(scoreDoc.doc);
                         relevatDocuments.add(doc);
                     }
                 }
@@ -198,9 +194,8 @@ public class RocchioQueryExpansion {
 
                     BytesRef text;
                     while ((text = termsEnum.next()) != null) {
-                        long tf = termsEnum.totalTermFreq();
-                        int df = termsEnum.docFreq();
-                        double idf = 1 + Math.log(docsNum / df + 1);
+                        double tf = tf(termsEnum.totalTermFreq());
+                        double idf = idf(docsNum, termsEnum.docFreq());
                         double tfidf = tf * idf;
                         termScoreMap.put(text.utf8ToString(), BETA * tfidf);
                     }
@@ -208,6 +203,13 @@ public class RocchioQueryExpansion {
                 } catch (IOException ex) {
                     Logger.getLogger(RocchioQueryExpansion.class.getName())
                             .log(Level.SEVERE, null, ex);
+                } finally {
+                    try {
+                        idxReader.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(RocchioQueryExpansion.class.getName())
+                                .log(Level.SEVERE, null, ex);
+                    }
                 }
             });
 
@@ -233,9 +235,8 @@ public class RocchioQueryExpansion {
                     BytesRef text;
                     while ((text = termsEnum.next()) != null) {
                         if (text.utf8ToString().equalsIgnoreCase(term)) {
-                            long tf = termsEnum.totalTermFreq();
-                            int df = termsEnum.docFreq();
-                            double idf = 1 + Math.log(docsNum / df + 1);
+                            double tf = tf(termsEnum.totalTermFreq());
+                            double idf = idf(docsNum, termsEnum.docFreq());
                             double tfidf = tf * idf;
                             idxReader.close();
                             return tfidf;
@@ -251,5 +252,13 @@ public class RocchioQueryExpansion {
         }
 
         return 0;
+    }
+    
+    private double tf(long tfInCollection) {
+        return 1 + ((Math.log(tfInCollection) / Math.log(2)));
+    }
+    
+    private double idf(int docsSize, int docFreq) {
+        return (Math.log(docsSize/docFreq) / Math.log(2));
     }
 }
