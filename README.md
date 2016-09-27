@@ -13,12 +13,12 @@ RI Challenge - http://www.wladmirbrandao.com/course/cs-bsc-irs_RIChallenge_20160
 
 ### Run
 
-Put data inside "docs" folder in project root.
+Put data inside "data" folder in project root.
 
 ```sh
 $ git clone https://github.com/josuesasilva/jsearch.git
 $ cd jsearch
-$ mkdir docs # put collection here
+$ mkdir data # put collection here
 ```
 
 ```sh
