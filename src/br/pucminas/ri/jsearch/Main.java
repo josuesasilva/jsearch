@@ -63,11 +63,13 @@ public class Main {
 
         try (IndexWriter writer = new IndexWriter(dir, iwc)) {
             Indexer.indexDocs(writer, docDir);
+            System.out.printf("Indexed %d docs", writer.numDocs());
         }
 
         Date end = new Date();
         System.out.println("\nIndex time: " + (end.getTime() - start.getTime()
                 + " milliseconds\n"));
+        
     }
 
     private static void performUserQuery(String userQuery) {
@@ -190,6 +192,7 @@ public class Main {
             // Begin - Perform Index
             //
             performIndexer(docDir, dir, iwc);
+            
             //
             // End - Perform Index
             //
