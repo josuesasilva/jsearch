@@ -1,5 +1,6 @@
 package br.pucminas.ri.jsearch;
 
+import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -152,7 +153,7 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) {        
         //
         // Begin - Parse user query
         //
@@ -205,6 +206,7 @@ public class Main {
                 HashMap<String, String> queries = getQueriesFromFile(queriesFile);
                 Searcher.search(queries, RankingEnum.BM25);
                 Searcher.search(queries, RankingEnum.ROCCHIO);
+                Searcher.search(queries, RankingEnum.QUERY_EXPANSION);
             } else {
                 System.exit(1);
             }

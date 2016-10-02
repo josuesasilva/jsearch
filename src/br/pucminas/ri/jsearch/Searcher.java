@@ -1,7 +1,8 @@
 package br.pucminas.ri.jsearch;
 
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
-import br.pucminas.ri.jsearch.queryexpansion.RocchioQuery;
+import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
+import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,6 +42,9 @@ public class Searcher {
                 break;
             case BM25:
                 tag = "BM25";
+                break;
+            case QUERY_EXPANSION:
+                tag = "QueryExpansion";
                 break;
             default:
                 break;
@@ -84,24 +88,29 @@ public class Searcher {
             QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
             String rankingName = new String();
 
-            RocchioQuery rq = null;
+            QueryExpanded qe = null;
 
             switch (ranking) {
                 case ROCCHIO:
                     rankingName = "Rocchio";
                     RocchioQueryExpansion exp = 
                             new RocchioQueryExpansion(indexReader, indexSearcher, queryParser);
-                    rq = exp.expandQuery(qid, text);
+                    qe = exp.expandQuery(qid, text);
                     break;
                 case BM25:
                     rankingName = "BM25";
                     indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
                     break;
+                case QUERY_EXPANSION:
+                    rankingName = "QueryExpansion";
+                    QueryExpansion qexp = new QueryExpansion(qid, text);
+                    qe = qexp.expandQuery();
+                    break;
                 default:
                     break;
             }
 
-            Query query = rq != null ? queryParser.parse(rq.getQuery()) : 
+            Query query = qe != null ? queryParser.parse(qe.getQuery()) : 
                     queryParser.parse(text);
             
             TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);

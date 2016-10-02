@@ -20,12 +20,12 @@ package br.pucminas.ri.jsearch.queryexpansion;
  *
  * @author josue
  */
-public class RocchioQuery {
+public class QueryExpanded {
     
     private String qId;
     private String query;
 
-    public RocchioQuery(String qId, String query) {
+    public QueryExpanded(String qId, String query) {
         this.qId = qId;
         this.query = query;
     }

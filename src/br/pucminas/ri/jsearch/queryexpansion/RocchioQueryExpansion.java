@@ -75,7 +75,7 @@ public class RocchioQueryExpansion {
         this.indexReader = indexReader;
     }
 
-    public RocchioQuery expandQuery(String qId, String strQuery) {
+    public QueryExpanded expandQuery(String qId, String strQuery) {
         
         loadTopDocs(strQuery);
 
@@ -113,7 +113,7 @@ public class RocchioQueryExpansion {
                 rocchioTerms.append(' ').append(termsVector.get(i).getKey());
             }
             
-            return new RocchioQuery(qId, rocchioTerms.toString().trim());
+            return new QueryExpanded(qId, rocchioTerms.toString().trim());
 
         } catch (LockObtainFailedException ex) {
             Logger.getLogger(RocchioQueryExpansion.class.getName())
@@ -123,7 +123,7 @@ public class RocchioQueryExpansion {
                     .log(Level.SEVERE, null, ex);
         }
 
-        return new RocchioQuery(qId, "");
+        return new QueryExpanded(qId, "");
     }
 
     private void loadTopDocs(String strQuery) {

@@ -21,5 +21,5 @@ package br.pucminas.ri.jsearch;
  * @author josue
  */
 public enum RankingEnum {
-    BM25, ROCCHIO;
+    BM25, ROCCHIO, QUERY_EXPANSION;
 }
