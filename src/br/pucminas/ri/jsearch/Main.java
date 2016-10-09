@@ -1,6 +1,7 @@
 package br.pucminas.ri.jsearch;
 
-import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
+import br.pucminas.ri.jsearch.utils.RankingEnum;
+import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -192,7 +193,7 @@ public class Main {
             //
             // Begin - Perform Index
             //
-            performIndexer(docDir, dir, iwc);
+            //performIndexer(docDir, dir, iwc);
             
             //
             // End - Perform Index

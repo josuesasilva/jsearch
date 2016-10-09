@@ -16,7 +16,7 @@
  */
 package br.pucminas.ri.jsearch.queryexpansion;
 
-import br.pucminas.ri.jsearch.Constants;
+import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;

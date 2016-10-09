@@ -4,6 +4,7 @@ package br.pucminas.ri.jsearch;
  *
  * @author josue
  */
+import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.zip.GZIPFile;
 import java.io.File;
 import java.io.IOException;

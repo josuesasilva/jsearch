@@ -1,5 +1,6 @@
 package br.pucminas.ri.jsearch;
 
+import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;

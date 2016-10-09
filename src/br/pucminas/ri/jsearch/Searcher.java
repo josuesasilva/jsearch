@@ -1,5 +1,7 @@
 package br.pucminas.ri.jsearch;
 
+import br.pucminas.ri.jsearch.utils.RankingEnum;
+import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
@@ -109,7 +111,7 @@ public class Searcher {
                 default:
                     break;
             }
-
+            
             Query query = qe != null ? queryParser.parse(qe.getQuery()) : 
                     queryParser.parse(text);
             
