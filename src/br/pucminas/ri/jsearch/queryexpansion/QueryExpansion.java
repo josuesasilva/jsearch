@@ -16,7 +16,7 @@
  */
 package br.pucminas.ri.jsearch.queryexpansion;
 
-import br.pucminas.ri.jsearch.Constants;
+import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,9 +28,13 @@ import org.apache.lucene.wordnet.SynonymMap;
  */
 public class QueryExpansion {
     
-    String userQuery;
-    String queryId;
-    SynonymMap map;
+    private final int MAX_SYNS = 5;
+    private final int MIN_TERM_SIZE = 3;
+    
+    private String userQuery;
+    private String queryId;
+    
+    private static SynonymMap map;
     
     public QueryExpansion(String qid, String query) {
         userQuery = query;
@@ -47,7 +51,9 @@ public class QueryExpansion {
         StringBuilder newQuery = new StringBuilder();
         
         if (userQuery != null) {
-            for (String term : userQuery.split("\\s+")) {
+            String[] termsArray = userQuery.split("\\s+");
+            
+            for (String term : termsArray) {
                 String[] terms = termSynonyms(term);
                 newQuery.append(concatTerms(term, terms));
                 newQuery.append(" ");
@@ -60,12 +66,12 @@ public class QueryExpansion {
     }
     
     private String[] termSynonyms(String term) {
-        if (term != null && !term.isEmpty() && term.length() > 3) {
+        if (term != null && !term.isEmpty() && term.length() > MIN_TERM_SIZE) {
             String[] syns = map.getSynonyms(term);
             
-            // Caso houver mais de 5 sinonimos por termo preencher preferencialmente
+            // Caso houver mais de MAX_SYNS sinonimos por termo preencher preferencialmente
             // com sinonimos que iniciam com a mesma letra.
-            if (syns.length > 5) {
+            if (syns.length > MAX_SYNS) {
                 ArrayList<String> filterTerms = new ArrayList<>();
                 
                 for (String t : syns) {
@@ -74,7 +80,7 @@ public class QueryExpansion {
                     }
                 }
                 
-                if (filterTerms.size() < 5) {
+                if (filterTerms.size() < MAX_SYNS) {
                     for (String t : syns) {
                         if (!filterTerms.contains(t)) {
                             filterTerms.add(t);
@@ -84,13 +90,13 @@ public class QueryExpansion {
                 
                 String[] newSyns;
                 
-                if (filterTerms.size() > 5) {
-                    newSyns = new String[5];
+                if (filterTerms.size() > MAX_SYNS) {
+                    newSyns = new String[MAX_SYNS];
                 } else {
                     newSyns = new String[filterTerms.size()];
                 }
                 
-                for (int i = 0; i < 5 && i < filterTerms.size(); i++) {
+                for (int i = 0; i < MAX_SYNS && i < filterTerms.size(); i++) {
                     newSyns[i] = filterTerms.get(i);
                 }
                 
@@ -117,8 +123,10 @@ public class QueryExpansion {
     }
     
     private void loadSynonims() throws IOException {
-        String dataPath = String.format("%s/%s", Constants.DOCS_PATH, 
-                Constants.WORDNET_DATA);
-        map = new SynonymMap(new FileInputStream(dataPath));
+        if (map == null) {
+            String dataPath = String.format("%s/%s", Constants.RESULT_PATH, 
+                    Constants.WORDNET_DATA);
+            map = new SynonymMap(new FileInputStream(dataPath));
+        }
     }
 }
