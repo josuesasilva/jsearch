@@ -1,15 +1,28 @@
 # jsearch
 RI Challenge - http://www.wladmirbrandao.com/course/cs-bsc-irs_RIChallenge_201602.pdf
 
-### Tech
+Technical Report - https://github.com/josuesasilva/jsearch/blob/master/relatorio_tecnico.pdf
 
-[Apache Lucene] - The Apache LuceneTM project develops open-source search software.
-
-### Requirements
+### Runtime Requirements
 
 * Linux or Mac OSX
 * OpenJDK 1.8+ or Oracle JDK 1.8+
 
+### Dependencies
+
+* [Apache Lucene] - The Apache LuceneTM project develops open-source search software.
+
+* [Lucene Wordnet]- Loads the WordNet prolog file wn_s.pl into a thread-safe main-memory hash map that can be used for fast high-frequency lookups of synonyms for any given (lowercase) word string.
+
+
+
+### Build Requirements
+
+* Netbeans IDE 8.0+
+
+### Building
+
+Load project with with Netbeans IDE.
 
 ### Run
 
@@ -30,11 +43,6 @@ or
 $ java -jar jsearch.jar -f queriesFile
 ```
 
-### Results
+### Documentation
 
 Inside release folder contains Trec Eval binary and results for all supported IR models.
-
-### Build
-
-Load project with with Netbeans IDE.
-
