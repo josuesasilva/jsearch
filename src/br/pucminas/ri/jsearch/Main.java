@@ -1,15 +1,22 @@
 package br.pucminas.ri.jsearch;
 
+import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
+import br.pucminas.ri.jsearch.querylog.QueryLogController;
+import br.pucminas.ri.jsearch.querylog.QueryLogModel;
 import br.pucminas.ri.jsearch.utils.RankingEnum;
 import br.pucminas.ri.jsearch.utils.Constants;
+import br.pucminas.ri.jsearch.utils.StringList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;
@@ -77,9 +84,43 @@ public class Main {
     private static void performUserQuery(String userQuery) {
         System.out.println("Query: " + userQuery);
 
+        System.out.println("User query: " + userQuery);
+        String ip = "127.0.0.1";
+        QueryLogController qc = new QueryLogController();
+        
         Date start = new Date();
-        Searcher.search("0", userQuery, RankingEnum.BM25, null);
+        qc.insert(ip, userQuery);
         Date end = new Date();
+        System.out.println("\nLog query time: " + (end.getTime() - start.getTime()
+                + " total milliseconds"));
+        
+        start = new Date();
+        List<QueryLogModel> queries = qc.getLogsByIp(ip);
+        end = new Date();
+        System.out.println("\nRecover log time: " + (end.getTime() - start.getTime()
+                + " total milliseconds"));
+        
+        System.out.println("\nSuggestions: ");
+        StringList result = new StringList();
+        int count = 0;
+        for (QueryLogModel q : queries) {
+            if (StringUtils.getJaroWinklerDistance(userQuery, q.getQuery()) >= 0.80
+                    && !result.contains(q.getQuery())
+                    && count < 5) {
+                result.add(q.getQuery());
+                System.out.println(q.getQuery());
+                count++;
+            }
+        }
+        
+        QueryExpansion qe = new QueryExpansion("0", userQuery);
+        if (!result.contains(qe.expandQuery().getQuery())) {
+            System.out.println(qe.expandQuery().getQuery());
+        }
+        
+        start = new Date();
+        Searcher.search("0", userQuery, RankingEnum.BM25, null);
+        end = new Date();
         System.out.println("\nSearch time :" + (end.getTime() - start.getTime()
                 + " total milliseconds"));
 
@@ -193,7 +234,7 @@ public class Main {
             //
             // Begin - Perform Index
             //
-            //performIndexer(docDir, dir, iwc);
+            performIndexer(docDir, dir, iwc);
             
             //
             // End - Perform Index
