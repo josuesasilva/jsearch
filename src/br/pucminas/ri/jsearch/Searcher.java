@@ -5,6 +5,8 @@ import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
+import br.pucminas.ri.jsearch.utils.ConcreteTFIDFSimilarity;
+import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,8 +16,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -86,11 +86,12 @@ public class Searcher {
             Directory directory = FSDirectory.open(path);
             IndexReader indexReader = DirectoryReader.open(directory);
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            Analyzer analyzer = new StandardAnalyzer();
+            PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
             QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
             String rankingName = new String();
 
             QueryExpanded qe = null;
+            String queryString = "";
 
             switch (ranking) {
                 case ROCCHIO:
@@ -98,22 +99,25 @@ public class Searcher {
                     RocchioQueryExpansion exp = 
                             new RocchioQueryExpansion(indexReader, indexSearcher, queryParser);
                     qe = exp.expandQuery(qid, text);
+                    queryString = qe.getQuery();
                     break;
                 case BM25:
                     rankingName = "BM25";
                     indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
+                    queryString = text;
                     break;
                 case QUERY_EXPANSION:
                     rankingName = "QueryExpansion";
                     QueryExpansion qexp = new QueryExpansion(qid, text);
                     qe = qexp.expandQuery();
+                    indexSearcher.setSimilarity(new ConcreteTFIDFSimilarity());
+                    queryString = qe.getQuery();
                     break;
                 default:
                     break;
             }
             
-            Query query = qe != null ? queryParser.parse(qe.getQuery()) : 
-                    queryParser.parse(text);
+            Query query = queryParser.parse(queryString);
             
             TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
             ScoreDoc[] hits = topDocs.scoreDocs;

@@ -5,20 +5,18 @@ import br.pucminas.ri.jsearch.querylog.QueryLogController;
 import br.pucminas.ri.jsearch.querylog.QueryLogModel;
 import br.pucminas.ri.jsearch.utils.RankingEnum;
 import br.pucminas.ri.jsearch.utils.Constants;
+import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
 import br.pucminas.ri.jsearch.utils.StringList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
@@ -89,7 +87,7 @@ public class Main {
         QueryLogController qc = new QueryLogController();
         
         Date start = new Date();
-        qc.insert(ip, userQuery);
+        qc.insert(ip, userQuery, "0");
         Date end = new Date();
         System.out.println("\nLog query time: " + (end.getTime() - start.getTime()
                 + " total milliseconds"));
@@ -117,18 +115,8 @@ public class Main {
         if (!result.contains(qe.expandQuery().getQuery())) {
             System.out.println(qe.expandQuery().getQuery());
         }
-        
-        start = new Date();
-        Searcher.search("0", userQuery, RankingEnum.BM25, null);
-        end = new Date();
-        System.out.println("\nSearch time :" + (end.getTime() - start.getTime()
-                + " total milliseconds"));
 
-        start = new Date();
-        Searcher.search("0", userQuery, RankingEnum.ROCCHIO, null);
-        end = new Date();
-        System.out.println("\nSearch time :" + (end.getTime() - start.getTime()
-                + " total milliseconds"));
+        Searcher.search("0", userQuery, RankingEnum.BM25, null);
     }
 
     private static HashMap<String, String> getQueriesFromFile(String queriesFile) {
@@ -222,11 +210,12 @@ public class Main {
             //
             Path path = Paths.get(Constants.INDEX_PATH);
             Directory dir = FSDirectory.open(path);
-            Analyzer analyzer = new StandardAnalyzer();
+            PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
             iwc.setOpenMode(OpenMode.CREATE);
             iwc.setRAMBufferSizeMB(512.0);
+            
             //
             // End - Setup
             //

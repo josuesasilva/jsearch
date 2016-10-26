@@ -17,6 +17,7 @@
 package br.pucminas.ri.jsearch.queryexpansion;
 
 import br.pucminas.ri.jsearch.utils.Constants;
+import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -28,8 +29,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.DirectoryReader;
@@ -63,14 +62,14 @@ public class RocchioQueryExpansion {
     private final float BETA = 0.8f;
     private final float ALPHA = 1.0f;
 
-    private final IndexSearcher indexSeacher;
+    private final IndexSearcher indexSearcher;
     private final IndexReader indexReader;
     private final QueryParser queryParser;
     private final ArrayList<Document> relevatDocuments;
 
     public RocchioQueryExpansion(IndexReader indexReader, IndexSearcher indexSeacher, QueryParser queryParser) {
         relevatDocuments = new ArrayList<>();
-        this.indexSeacher = indexSeacher;
+        this.indexSearcher = indexSeacher;
         this.queryParser = queryParser;
         this.indexReader = indexReader;
     }
@@ -139,7 +138,7 @@ public class RocchioQueryExpansion {
             TopDocs topDocs = null;
 
             try {
-                topDocs = indexSeacher.search(query, MAX_DOCS);
+                topDocs = indexSearcher.search(query, MAX_DOCS);
             } catch (IOException ex) {
                 Logger.getLogger(RocchioQueryExpansion.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -150,7 +149,7 @@ public class RocchioQueryExpansion {
                     Document doc = null;
 
                     try {
-                        doc = indexSeacher.doc(scoreDoc.doc);
+                        doc = indexSearcher.doc(scoreDoc.doc);
                     } catch (IOException ex) {
                         Logger.getLogger(RocchioQueryExpansion.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -167,7 +166,7 @@ public class RocchioQueryExpansion {
             throws CorruptIndexException, LockObtainFailedException, IOException {
 
         Directory index = new RAMDirectory();
-        Analyzer analyzer = new StandardAnalyzer();
+        PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
         IndexWriterConfig conf = new IndexWriterConfig(analyzer);
 
         try (IndexWriter idxWriter = new IndexWriter(index, conf)) {
@@ -190,7 +189,6 @@ public class RocchioQueryExpansion {
                 try {
                     Terms terms = reader.terms(Constants.DOC_CONTENT);
                     TermsEnum termsEnum = terms.iterator();
-                    PostingsEnum postingsEnum = termsEnum.postings(null);
                     int docsNum = idxReader.numDocs();
 
                     BytesRef text;

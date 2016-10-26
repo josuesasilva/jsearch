@@ -38,8 +38,8 @@ public class QueryLogController {
         emf.close();
     }
     
-    synchronized public void insert(String ip, String q) {
-        QueryLogModel query = new QueryLogModel(ip, q);
+    synchronized public void insert(String ip, String q, String docId) {
+        QueryLogModel query = new QueryLogModel(ip, q, docId);
         createConnection();
         em.getTransaction().begin();
         em.persist(query);

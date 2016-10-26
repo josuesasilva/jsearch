@@ -35,15 +35,17 @@ public class QueryLogModel implements Serializable {
 
     private String ip;
     private String query;
+    private String docId;
     private Date date;
 
     public QueryLogModel() {
     }
 
-    public QueryLogModel(String ip, String query) {
+    public QueryLogModel(String ip, String query, String doc) {
         this.ip = ip;
         this.query = query;
         this.date = new Date();
+        this.docId = doc;
     }
 
     public Long getId() {
@@ -60,6 +62,10 @@ public class QueryLogModel implements Serializable {
 
     public Date getDate() {
         return date;
+    }
+
+    public String getDocId() {
+        return docId;
     }
 
     @Override

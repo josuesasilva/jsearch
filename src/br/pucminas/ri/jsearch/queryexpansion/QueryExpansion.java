@@ -29,7 +29,6 @@ import org.apache.lucene.wordnet.SynonymMap;
 public class QueryExpansion {
     
     private final int MAX_SYNS = 5;
-    private final int MIN_TERM_SIZE = 3;
     
     private String userQuery;
     private String queryId;
@@ -49,15 +48,20 @@ public class QueryExpansion {
     public QueryExpanded expandQuery() {
         QueryExpanded query = new QueryExpanded(queryId, userQuery);
         StringBuilder newQuery = new StringBuilder();
-        
+        ArrayList<String[]> terms = new ArrayList<>();
         if (userQuery != null) {
             String[] termsArray = userQuery.split("\\s+");
             
             for (String term : termsArray) {
-                String[] terms = termSynonyms(term);
-                newQuery.append(concatTerms(term, terms));
+                newQuery.append(term);
                 newQuery.append(" ");
+                terms.add(termSynonyms(term));
             }
+            
+            terms.stream().forEach((array) -> {
+                newQuery.append(concatTerms(" " , array));
+                newQuery.append(" ");
+            });
             
             query.setQuery(newQuery.toString().trim());
         }
@@ -66,7 +70,7 @@ public class QueryExpansion {
     }
     
     private String[] termSynonyms(String term) {
-        if (term != null && !term.isEmpty() && term.length() > MIN_TERM_SIZE) {
+        if (term != null && !term.isEmpty()) {
             String[] syns = map.getSynonyms(term);
             
             // Caso houver mais de MAX_SYNS sinonimos por termo preencher preferencialmente
