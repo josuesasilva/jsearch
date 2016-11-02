@@ -1,4 +1,4 @@
-package br.pucminas.ri.jsearch;
+package br.pucminas.ri.jsearch.utils;
 
 import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.BufferedReader;

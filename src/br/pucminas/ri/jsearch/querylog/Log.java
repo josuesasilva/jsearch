@@ -25,7 +25,7 @@ import javax.persistence.*;
  * @author josue
  */
 @Entity
-public class QueryLogModel implements Serializable {
+public class Log implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,10 +38,10 @@ public class QueryLogModel implements Serializable {
     private String docId;
     private Date date;
 
-    public QueryLogModel() {
+    public Log() {
     }
 
-    public QueryLogModel(String ip, String query, String doc) {
+    public Log(String ip, String query, String doc) {
         this.ip = ip;
         this.query = query;
         this.date = new Date();

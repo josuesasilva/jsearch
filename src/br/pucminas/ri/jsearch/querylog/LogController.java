@@ -23,7 +23,7 @@ import javax.persistence.*;
  *
  * @author josue
  */
-public class QueryLogController {
+public class LogController {
 
     EntityManagerFactory emf;
     EntityManager em;
@@ -39,7 +39,7 @@ public class QueryLogController {
     }
     
     synchronized public void insert(String ip, String q, String docId) {
-        QueryLogModel query = new QueryLogModel(ip, q, docId);
+        Log query = new Log(ip, q, docId);
         createConnection();
         em.getTransaction().begin();
         em.persist(query);
@@ -47,22 +47,22 @@ public class QueryLogController {
         closeConnection();
     }
     
-    synchronized public List<QueryLogModel> getAll() {
+    synchronized public List<Log> getAll() {
         createConnection();
-        TypedQuery<QueryLogModel> query = 
-                em.createQuery("SELECT l FROM QueryLogModel l", QueryLogModel.class);
-        List<QueryLogModel> result = query.getResultList();
+        TypedQuery<Log> query = 
+                em.createQuery("SELECT l FROM Log l", Log.class);
+        List<Log> result = query.getResultList();
         closeConnection();
         return result;
     }
     
-    synchronized public List<QueryLogModel> getLogsByIp(String ip) {
+    synchronized public List<Log> getLogsByIp(String ip) {
         createConnection();
         String queryString = 
-                String.format("SELECT l FROM QueryLogModel l WHERE l.ip = '%s'", ip);
+                String.format("SELECT l FROM Log l WHERE l.ip = '%s'", ip);
         Query query = em.createQuery(queryString);
         query.getResultList();
-        List<QueryLogModel> result = query.getResultList();
+        List<Log> result = query.getResultList();
         closeConnection();
         return result;
     }

@@ -1,8 +1,8 @@
 package br.pucminas.ri.jsearch;
 
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
-import br.pucminas.ri.jsearch.querylog.QueryLogController;
-import br.pucminas.ri.jsearch.querylog.QueryLogModel;
+import br.pucminas.ri.jsearch.querylog.LogController;
+import br.pucminas.ri.jsearch.querylog.Log;
 import br.pucminas.ri.jsearch.utils.RankingEnum;
 import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
@@ -84,7 +84,7 @@ public class Main {
 
         System.out.println("User query: " + userQuery);
         String ip = "127.0.0.1";
-        QueryLogController qc = new QueryLogController();
+        LogController qc = new LogController();
         
         Date start = new Date();
         qc.insert(ip, userQuery, "0");
@@ -93,7 +93,7 @@ public class Main {
                 + " total milliseconds"));
         
         start = new Date();
-        List<QueryLogModel> queries = qc.getLogsByIp(ip);
+        List<Log> queries = qc.getLogsByIp(ip);
         end = new Date();
         System.out.println("\nRecover log time: " + (end.getTime() - start.getTime()
                 + " total milliseconds"));
@@ -101,7 +101,7 @@ public class Main {
         System.out.println("\nSuggestions: ");
         StringList result = new StringList();
         int count = 0;
-        for (QueryLogModel q : queries) {
+        for (Log q : queries) {
             if (StringUtils.getJaroWinklerDistance(userQuery, q.getQuery()) >= 0.80
                     && !result.contains(q.getQuery())
                     && count < 5) {
