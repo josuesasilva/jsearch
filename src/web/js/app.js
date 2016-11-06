@@ -8,44 +8,8 @@ $(document).ready(function () {
     var endPointBase = "http://localhost:4567";
     var endPointSearch = endPointBase + "/search?query=";
     var endPointIndexer = endPointBase + "/performIndexer";
-
-    var availableTags = [
-        "ActionScript",
-        "AppleScript",
-        "Asp",
-        "BASIC",
-        "C",
-        "C++",
-        "Clojure",
-        "COBOL",
-        "ColdFusion",
-        "Erlang",
-        "Fortran",
-        "Groovy",
-        "Haskell",
-        "Java",
-        "JavaScript",
-        "Lisp",
-        "Perl",
-        "PHP",
-        "Python",
-        "Ruby",
-        "Scala",
-        "Scheme"
-    ];
-
-    /* 	var lastXhr;
-     $("#search-input").autocomplete({
-     source: function( request, response ) {
-     if (lastXhr) lastXhr.abort();
-     lastXhr = $.getJSON(endPointSearch, request, function( data, status, xhr ) {
-     if (xhr === lastXhr) {
-     response(data);
-     }
-     });
-     }
-     }); */
-
+    var endPointLog = endPointBase + "/log";
+    var endPointAutoComplete = endPointBase + "/autocomplete?query=";
 
     /*
      * Default states
@@ -57,8 +21,27 @@ $(document).ready(function () {
      * Events
      */
 
+    var lastXhr;
+
     $("#search-input").autocomplete({
-        source: availableTags
+        source: function (request, response) {
+            var query = $('#search-input').val();
+            
+            if (query !== undefined && query !== '') {
+                
+                if (lastXhr) {
+                    lastXhr.abort();
+                }
+                
+                lastXhr = $.getJSON(endPointAutoComplete + query, request, function (data, status, xhr) {
+                    if (xhr === lastXhr) {
+                        console.log(data);
+                        response(data.suggestions);
+                    }
+                });
+                
+            }
+        }
     });
 
     $("#request-user-input").click(function () {
@@ -87,15 +70,20 @@ $(document).ready(function () {
     });
 
     $("#user-search-input").submit(function (event) {
-        showSearchResult();
+        var query = $('#search-input').val();
+        if (!(query.trim() === '')) {
+            showSearchResult(query);
+        }
         event.preventDefault();
     });
 
     $("#user-input-top").submit(function (event) {
-        showSearchResult();
+        var query = $('#search-input-top').val();
+        if (!(query.trim() === '')) {
+            showSearchResult(query);
+        }
         event.preventDefault();
     });
-
 
     /*
      * private methods
@@ -121,28 +109,52 @@ $(document).ready(function () {
         $("#search-content-input").focus();
     }
 
-    function showSearchResult() {
+    function showSearchResult(query) {
         $("#search-content-input").hide();
         $("#user-search-input").hide();
         $("#user-input-top").show();
         $("#search-content-result").show();
         $("#menu-options").hide();
 
-        loadData();
+        loadData(query);
     }
 
-    function addItem(title, content) {
-        $("#results").append("<a href='#' class='list-group-item'><h4 class='list-group-item-heading'>" + title +
-                "</h4><p class='list-group-item-text'>" + content + "</p></a>");
+    function addItem(id, title, content) {
+        $("#results").append("<a data-doc=" + id +
+                " class='list-group-item doc-item'><h4 class='list-group-item-heading' data-doc="
+                + id + ">" + title +
+                "</h4><p class='list-group-item-text' data-doc= " + id + ">"
+                + content + "</p></a>");
     }
 
-    function loadData() {
-        for (var i = 0; i < 10; i++) {
-            addItem("teste", "Testando");
-        }
+    function loadData(query) {
+        $.get(endPointSearch + query, function (data) {
+            data = JSON.parse(data);
+            console.log(data);
 
-        $("#result-size").text(10);
-        $("#result-time").text("0,35 segundos");
+            if (data.docs !== undefined) {
+                data.docs.forEach(function (value) {
+                    addItem(value.id, value.title, value.content);
+                });
+
+                $("#result-size").text(data.docs.length);
+                $("#result-time").text(data.time / 1000.0 + " segundos");
+                $("#search-input-top").val(query);
+
+                $(".doc-item").click(function (event) {
+                    var target = $(event.target);
+                    var id = target.attr('data-doc');
+
+                    if (!(id === undefined)) {
+                        var url = endPointLog + "?doc=" + id + "&query=" + query;
+                        $.post(url, function (data) {
+                            console.log(data);
+                        });
+                    }
+                });
+            }
+        });
+
     }
 
 });
