@@ -27,7 +27,14 @@ public class StringList extends ArrayList<String> {
     public boolean contains(String str) {
         return this.stream().anyMatch((s) -> (str.equals(s)));
     }
-    
-    
+
+    @Override
+    public String[] toArray() {
+        String[] result = new String[this.size()];
+        for (int i = 0; i < this.size(); i++) {
+            result[i] = this.get(i);
+        }
+        return result;
+    }    
     
 }

@@ -24,13 +24,15 @@ public class SimpleDocument {
     
     private String title;
     private String content;
+    private Integer id;
 
     public SimpleDocument() {
         this.title = "";
         this.content = "";
     }
     
-    public SimpleDocument(String title, String content) {
+    public SimpleDocument(Integer id, String title, String content) {
+        this.id = id;
         this.title = title;
         this.content = content;
     }
@@ -50,7 +52,12 @@ public class SimpleDocument {
     public void setContent(String content) {
         this.content = content;
     }
-    
-    
-    
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 }

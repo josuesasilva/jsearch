@@ -5,13 +5,10 @@ import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
-import br.pucminas.ri.jsearch.querylog.Log;
-import br.pucminas.ri.jsearch.querylog.LogController;
 import br.pucminas.ri.jsearch.rest.model.SimpleDocument;
 import br.pucminas.ri.jsearch.rest.model.UserSearchResponse;
 import br.pucminas.ri.jsearch.utils.ConcreteTFIDFSimilarity;
 import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
-import br.pucminas.ri.jsearch.utils.StringList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,11 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -76,7 +69,7 @@ public class Searcher {
             
                 for (ScoreDoc scoreDoc : hits) {
                     Document doc = indexSearcher.doc(scoreDoc.doc);
-                    result.add(new SimpleDocument(doc.get(Constants.DOC_TITLE),
+                    result.add(new SimpleDocument(scoreDoc.doc, doc.get(Constants.DOC_TITLE),
                             doc.get(Constants.DOC_CONTENT)));
                 }
             }
