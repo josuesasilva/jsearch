@@ -26,6 +26,7 @@ import java.util.Arrays;
 import org.apache.lucene.queryparser.classic.ParseException;
 import spark.Request;
 import spark.Response;
+import spark.Spark;
 import static spark.Spark.*;
 
 /**
@@ -35,6 +36,8 @@ import static spark.Spark.*;
 public class ApiController {
     
     public static void start() {
+        
+        Spark.staticFileLocation("/web");
         
         get("/hello", (req, res) -> {
             return hello();
