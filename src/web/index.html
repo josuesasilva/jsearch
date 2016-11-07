@@ -69,9 +69,9 @@
 				</form>
 				<!--end default input -->
 
-				<form id="simulation-input" class="container-fluid">
+				<form action="/fileUpload" method="post" id="simulation-input" class="container-fluid" enctype='multipart/form-data'>
 					<div class="form-group">
-						<input type="file" class="jfilestyle" data-placeholder="Selecionar arquivo..."data-buttonText="<span class='glyphicon glyphicon-folder-open'></span>">
+						<input name='uploaded_file' type="file" class="jfilestyle" data-placeholder="Selecionar arquivo..." data-buttonText="<span class='glyphicon glyphicon-folder-open'></span>">
 					</div>
 					<button type="submit" class="btn btn-default">Enviar</button>
 				</form>

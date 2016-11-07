@@ -26,8 +26,15 @@ import br.pucminas.ri.jsearch.rest.model.UserSearchResponse;
 import br.pucminas.ri.jsearch.utils.JsonTransformer;
 import br.pucminas.ri.jsearch.utils.StringList;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import spark.Request;
@@ -67,6 +74,10 @@ public class ApiController {
         post("/log", (req, res) -> {
             return log(req, res, log);
         });
+
+        post("/fileUpload", (req, res) -> {
+            return fileUpload(req, res);
+        });
     }
 
     private static Object hello() {
@@ -81,7 +92,63 @@ public class ApiController {
             log.insert(req.ip(), query, id);
             return "Select doc " + id + ".\nQuery logged!";
         } catch (Exception e) {
+            e.printStackTrace();
             return "Error on log.";
+        }
+    }
+
+    public static Object fileUpload(Request req, Response res) {
+        req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
+        Path out = Paths.get("result/queries.txt");
+
+        try (InputStream is = req.raw().getPart("uploaded_file").getInputStream()) {
+            Path folder = Paths.get("result");
+            if (Files.exists(folder)) {
+                Files.delete(out);
+            }
+            Files.createDirectories(Paths.get("result"));
+            Files.copy(is, out);
+            return evalTests(req, res);
+        } catch (IOException | ServletException e) {
+            e.printStackTrace();
+            return "Error on upload file";
+        }
+    }
+
+    private static Object evalTests(Request req, Response res) {
+        try {
+            Searcher.performTests("result/queries.txt");
+
+            String[] command = {"./tests.sh"};
+            Process p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+            
+            Path path = Paths.get("result/output.txt");
+
+            res.header("Content-Disposition", "attachment; filename=output.txt");
+            res.type("application/force-download");
+
+            byte[] data = null;
+            try {
+                data = Files.readAllBytes(path);
+            } catch (Exception e1) {
+
+                e1.printStackTrace();
+            }
+
+            res.raw().getOutputStream().write(data);
+            try {
+                res.raw().getOutputStream().write(data);
+                res.raw().getOutputStream().flush();
+                res.raw().getOutputStream().close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            return res.raw();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "Error on execute tests.";
         }
     }
 
@@ -121,7 +188,7 @@ public class ApiController {
             List<Log> logs = log.getLogsByIp(req.ip());
             int count = 0;
             StringList suggestions = new StringList();
-            
+
             for (Log l : logs) {
                 if (StringUtils.getJaroWinklerDistance(query, l.getQuery()) >= 0.80
                         && !suggestions.contains(l.getQuery())
@@ -130,7 +197,7 @@ public class ApiController {
                     count++;
                 }
             }
-            
+
             ac.setSugestions(suggestions.toArray());
         } catch (Exception e) {
             System.err.println(e.getMessage());

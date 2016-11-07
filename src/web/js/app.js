@@ -26,20 +26,20 @@ $(document).ready(function () {
     $("#search-input").autocomplete({
         source: function (request, response) {
             var query = $('#search-input').val();
-            
+
             if (query !== undefined && query !== '') {
-                
+
                 if (lastXhr) {
                     lastXhr.abort();
                 }
-                
+
                 lastXhr = $.getJSON(endPointAutoComplete + query, request, function (data, status, xhr) {
                     if (xhr === lastXhr) {
                         console.log(data);
                         response(data.suggestions);
                     }
                 });
-                
+
             }
         }
     });

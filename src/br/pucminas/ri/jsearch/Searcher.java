@@ -189,6 +189,13 @@ public class Searcher {
 
         System.out.println("\nDone.");
     }
+    
+    public static void performTests(String queriesFile) throws FileNotFoundException {
+        HashMap<String, String> queries = getQueriesFromFile(queriesFile);
+        search(queries, RankingEnum.BM25);
+        search(queries, RankingEnum.ROCCHIO);
+        search(queries, RankingEnum.QUERY_EXPANSION);
+    }
 
     public static void search(String qid, String text, RankingEnum ranking, PrintWriter writer) {
         try {
