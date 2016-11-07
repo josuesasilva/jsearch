@@ -30,7 +30,7 @@ Load project with with Netbeans IDE.
 
 ### Run
 
-Put data inside "data" folder in project root.
+Put data inside "data" folder in project root and put related query expected results inside "release" folder.
 
 ```sh
 $ git clone https://github.com/josuesasilva/jsearch.git
@@ -39,10 +39,7 @@ $ mkdir data # put collection here
 ```
 
 ```sh
-$ java -jar jsearch.jar -q userquery
+$ java -jar jsearch.jar
 ```
-or
 
-```sh
-$ java -jar jsearch.jar -f queriesFile
-```
+Open http://localhost:4567
