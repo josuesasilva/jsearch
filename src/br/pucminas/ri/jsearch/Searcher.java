@@ -40,6 +40,29 @@ import org.apache.lucene.store.Lock;
  */
 public class Searcher {
 
+    public static String documentHtml(int id) {
+        Lock lock;
+        Path path = Paths.get(Constants.INDEX_PATH);
+        String html = "";
+        
+        try (Directory directory = FSDirectory.open(path)) {
+            lock = directory.obtainLock(Constants.LOCK);
+            lock.ensureValid();
+            
+            try (IndexReader indexReader = DirectoryReader.open(directory)) {
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                Document d = indexSearcher.doc(id);
+                html = d.get(Constants.DOC_HTML);
+            }
+            
+            lock.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+        return html;
+    }
+    
     public static UserSearchResponse performUserQuery(String userQuery) throws IOException, ParseException {
         UserSearchResponse res;
         Lock lock;
@@ -69,7 +92,8 @@ public class Searcher {
             
                 for (ScoreDoc scoreDoc : hits) {
                     Document doc = indexSearcher.doc(scoreDoc.doc);
-                    result.add(new SimpleDocument(scoreDoc.doc, doc.get(Constants.DOC_TITLE),
+                    result.add(new SimpleDocument(scoreDoc.doc, 
+                            doc.get(Constants.DOC_TITLE), 
                             doc.get(Constants.DOC_CONTENT)));
                 }
             }

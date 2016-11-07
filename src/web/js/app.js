@@ -9,6 +9,7 @@ $(document).ready(function () {
     var endPointSearch = endPointBase + "/search?query=";
     var endPointIndexer = endPointBase + "/performIndexer";
     var endPointLog = endPointBase + "/log";
+    var endPointDocument = endPointBase + "/document?doc=";
     var endPointAutoComplete = endPointBase + "/autocomplete?query=";
 
     /*
@@ -119,12 +120,24 @@ $(document).ready(function () {
         loadData(query);
     }
 
-    function addItem(id, title, content) {
+    function summarize(string) {
+        var count = 150;
+        var result = "";
+        for (i = 0; i < string.length; i++) {
+            if (count > 0) {
+                result+=string[i];
+                count--;
+            }
+        }
+        return result+="...";
+    }
+
+    function addItem(id, title, content) {        
         $("#results").append("<a data-doc=" + id +
                 " class='list-group-item doc-item'><h4 class='list-group-item-heading' data-doc="
                 + id + ">" + title +
                 "</h4><p class='list-group-item-text' data-doc= " + id + ">"
-                + content + "</p></a>");
+                + summarize(content) + "</p></a>");
     }
 
     function loadData(query) {
@@ -150,6 +163,8 @@ $(document).ready(function () {
                         $.post(url, function (data) {
                             console.log(data);
                         });
+                        
+                        window.location.replace(endPointDocument+id);
                     }
                 });
             }

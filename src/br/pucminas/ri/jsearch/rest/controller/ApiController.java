@@ -58,6 +58,10 @@ public class ApiController {
         get("/hello", (req, res) -> {
             return hello();
         });
+        
+        get("/document", (req, res) -> {
+            return document(req, res);
+        });
 
         get("/performIndexer", (req, res) -> {
             return performIndex();
@@ -95,6 +99,11 @@ public class ApiController {
             e.printStackTrace();
             return "Error on log.";
         }
+    }
+    
+    private static Object document(Request req, Response res) {
+        String id = req.queryParams("doc");
+        return Searcher.documentHtml(Integer.parseInt(id));
     }
 
     public static Object fileUpload(Request req, Response res) {

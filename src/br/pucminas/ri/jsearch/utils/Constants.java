@@ -17,4 +17,5 @@ public class Constants {
     public static final String DOC_CONTENT = "contents";
     public static final String DOC_TITLE = "docno";
     public static final String WORDNET_DATA = "wn_s.pl";
+    public static final String DOC_HTML = "html";
 }

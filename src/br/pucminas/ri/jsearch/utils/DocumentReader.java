@@ -1,13 +1,11 @@
 package br.pucminas.ri.jsearch.utils;
 
-import br.pucminas.ri.jsearch.utils.Constants;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
@@ -35,7 +33,6 @@ public class DocumentReader implements Iterator<Document> {
 
         try {
             String line;
-            Pattern docNoTag = Pattern.compile("<DOCNO>\\s*(\\S+)\\s*<");
             boolean insideDocument = false;
             
             while (true) {
@@ -59,13 +56,6 @@ public class DocumentReader implements Iterator<Document> {
                     break;
                 }
 
-                Matcher m = docNoTag.matcher(line);
-                if (m.find()) {
-                    String docno = m.group(1);
-                    doc.add(new StringField(Constants.DOC_TITLE, 
-                            docno, Field.Store.YES));
-                }
-
                 sb.append(line);
             }
             if (sb.length() > 0) {
@@ -73,13 +63,17 @@ public class DocumentReader implements Iterator<Document> {
                 type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
                 type.setStored(true);
                 type.setStoreTermVectors(true);
-//                doc.add(new TextField(Constants.DOC_CONTENT,
-//                        sb.toString(), Field.Store.YES));
-                doc.add(new Field(Constants.DOC_CONTENT, sb.toString(), type));
-
+                
+                String html = sb.toString();
+                String content = HtmlParser.docToString(html);
+                String title = HtmlParser.docTitle(html);
+                
+                doc.add(new Field(Constants.DOC_HTML, html, type));
+                doc.add(new Field(Constants.DOC_CONTENT, content, type));
+                doc.add(new StringField(Constants.DOC_TITLE, title, Field.Store.YES));
             }
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             doc = null;
             System.err.println(e);
         }
