@@ -274,34 +274,29 @@ public class Searcher {
             QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
             String rankingName = new String();
 
-            QueryExpanded qe = null;
-            String queryString = "";
+            Query query = null;
 
             switch (ranking) {
                 case ROCCHIO:
                     rankingName = "Rocchio";
                     RocchioQueryExpansion exp
                             = new RocchioQueryExpansion(indexReader, indexSearcher, queryParser);
-                    qe = exp.expandQuery(qid, text);
-                    queryString = qe.getQuery();
+                    query = queryParser.parse(exp.expandQuery(qid, text).getQuery());
                     break;
                 case BM25:
                     rankingName = "BM25";
                     indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
-                    queryString = text;
+                    query = queryParser.parse(text);
                     break;
                 case QUERY_EXPANSION:
                     rankingName = "QueryExpansion";
-                    QueryExpansion qexp = new QueryExpansion(qid, text);
-                    qe = qexp.expandQuery();
-                    indexSearcher.setSimilarity(new ConcreteTFIDFSimilarity());
-                    queryString = qe.getQuery();
+                    query = queryParser.parse(text);
+                    UserSearchResponse res = search(query);
+                    query = QueryExpansion.expandQuery(text, res.getTerms());
                     break;
                 default:
                     break;
             }
-
-            Query query = queryParser.parse(queryString);
 
             TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
             ScoreDoc[] hits = topDocs.scoreDocs;
