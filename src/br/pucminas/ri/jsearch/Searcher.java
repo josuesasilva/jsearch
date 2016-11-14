@@ -6,6 +6,7 @@ import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
 import br.pucminas.ri.jsearch.rest.model.SimpleDocument;
+import br.pucminas.ri.jsearch.rest.model.TermEntry;
 import br.pucminas.ri.jsearch.rest.model.UserSearchResponse;
 import br.pucminas.ri.jsearch.utils.ConcreteTFIDFSimilarity;
 import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
@@ -17,12 +18,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Terms;
@@ -35,7 +37,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.util.BytesRef;
@@ -70,70 +71,19 @@ public class Searcher {
     }
     
     public static UserSearchResponse performUserQuery(String userQuery) throws IOException, ParseException {
-        UserSearchResponse res;
-        Lock lock;
+        UserSearchResponse result;
+        PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
+        QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
         
-        Path path = Paths.get(Constants.INDEX_PATH);
-        Date start;
-        ArrayList<SimpleDocument> result;
+        Query query = queryParser.parse(userQuery);
         
-        try (Directory directory = FSDirectory.open(path)) {
-            lock = directory.obtainLock(Constants.LOCK);
-            lock.ensureValid();
-            
-            try (IndexReader indexReader = DirectoryReader.open(directory)) {
-                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-                PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
-                QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
-                HashMap<String, Float> termsResult = new HashMap<>();
-                ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
-                
-                indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
-                
-                start = new Date();
-                
-                Query query = queryParser.parse(userQuery);
-                
-                TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
-                ScoreDoc[] hits = topDocs.scoreDocs;
-                result = new ArrayList<>();
-            
-                for (ScoreDoc scoreDoc : hits) {
-                    Document doc = indexSearcher.doc(scoreDoc.doc);
-                    
-                    Terms termVector = indexReader.getTermVector(scoreDoc.doc, Constants.DOC_CONTENT);
-                    PostingsEnum postings = null;
-                    TermsEnum itr = termVector.iterator();
-                    BytesRef bytesRef;
-                    
-                    while ((bytesRef = itr.next()) != null) {
-                        postings = itr.postings(postings);
-                        String termText = bytesRef.utf8ToString();
-                        
-                        while(postings.nextDoc() != PostingsEnum.NO_MORE_DOCS ) {
-                            int freq = postings.freq();
-                            float tf = sim.tf(freq);
-                            float idf = sim.idf(itr.docFreq(), indexReader.numDocs());
-                            termsResult.put(termText, tf*idf);
-                        }
-                    }
-                    
-                    result.add(new SimpleDocument(scoreDoc.doc, 
-                            doc.get(Constants.DOC_TITLE), 
-                            doc.get(Constants.DOC_CONTENT), 
-                            termsResult));
-                }
-            }
-        }
+        UserSearchResponse firstTesult = search(query);
         
-        lock.close();
+        Query newQuery = QueryExpansion.expandQuery(userQuery, firstTesult.getTerms());
         
-        Date end = new Date();
-
-        res = new UserSearchResponse(result, end.getTime() - start.getTime(), false, userQuery);
-        res.setError(false);
+        result = search(newQuery);
         
-        return res;
+        return result;
     }
 
     private static HashMap<String, String> getQueriesFromFile(String queriesFile) {
@@ -195,6 +145,72 @@ public class Searcher {
         }
 
         return new HashMap<>();
+    }
+    
+    private static UserSearchResponse search(Query query) throws IOException, ParseException {
+        UserSearchResponse res;
+        Lock lock;
+        
+        Path path = Paths.get(Constants.INDEX_PATH);
+        Date start;
+        ArrayList<SimpleDocument> result;
+        List<TermEntry> termsResult = new ArrayList<>();
+        
+        try (Directory directory = FSDirectory.open(path)) {
+            lock = directory.obtainLock(Constants.LOCK);
+            lock.ensureValid();
+            
+            try (IndexReader indexReader = DirectoryReader.open(directory)) {
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
+                
+                indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
+                
+                start = new Date();
+                
+                TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
+                ScoreDoc[] hits = topDocs.scoreDocs;
+                result = new ArrayList<>();
+            
+                for (ScoreDoc scoreDoc : hits) {
+                    Document doc = indexSearcher.doc(scoreDoc.doc);
+                    
+                    Terms termVector = indexReader.getTermVector(scoreDoc.doc, Constants.DOC_CONTENT);
+                    PostingsEnum postings = null;
+                    TermsEnum itr = termVector.iterator();
+                    BytesRef bytesRef;
+                    
+                    while ((bytesRef = itr.next()) != null) {
+                        postings = itr.postings(postings);
+                        String termText = bytesRef.utf8ToString();
+                        
+                        while(postings.nextDoc() != PostingsEnum.NO_MORE_DOCS ) {
+                            int freq = postings.freq();
+                            float tf = sim.tf(freq);
+                            float idf = sim.idf(itr.docFreq(), indexReader.numDocs());
+                            termsResult.add(new TermEntry(termText, tf*idf));
+                        }
+                    }
+                    
+                    result.add(new SimpleDocument(scoreDoc.doc, 
+                            doc.get(Constants.DOC_TITLE), 
+                            doc.get(Constants.DOC_CONTENT)));
+                }
+            }
+        }
+        
+        lock.close();
+        
+        Date end = new Date();
+
+        Collections.sort(termsResult);
+        
+        res = new UserSearchResponse(result, end.getTime() - start.getTime(), 
+                false, query.toString(), termsResult);
+        
+        res.setError(false);
+        
+        return res;
     }
 
     private static void search(HashMap<String, String> queries, RankingEnum ranking) throws FileNotFoundException {

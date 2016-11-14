@@ -16,10 +16,19 @@
  */
 package br.pucminas.ri.jsearch.queryexpansion;
 
+import br.pucminas.ri.jsearch.rest.model.TermEntry;
 import br.pucminas.ri.jsearch.utils.Constants;
+import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.wordnet.SynonymMap;
 
 /**
@@ -35,6 +44,8 @@ public class QueryExpansion {
     
     private static SynonymMap map;
     
+    private static final int EXPANSION_SIZE = 5;
+    
     public QueryExpansion(String qid, String query) {
         userQuery = query;
         
@@ -43,6 +54,24 @@ public class QueryExpansion {
         } catch (IOException e) {
             System.err.println("Could't possible load Wordnet database.");
         }
+    }
+    
+    public static Query expandQuery(String userQuery, List<TermEntry> terms) {
+        PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
+        QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
+        
+        Query query = null;
+        
+        try {
+            userQuery = getTopTerms(userQuery, terms).stream().map((term) -> " " + term)
+                    .reduce(userQuery, String::concat);
+            userQuery = userQuery.trim();
+            query = queryParser.parse(userQuery);
+        } catch (ParseException ex) {
+            Logger.getLogger(QueryExpansion.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return query;
     }
     
     public QueryExpanded expandQuery() {
@@ -132,5 +161,25 @@ public class QueryExpansion {
                     Constants.WORDNET_DATA);
             map = new SynonymMap(new FileInputStream(dataPath));
         }
+    }
+    
+    public static List<String> getTopTerms(String userQuery, List<TermEntry> terms) {
+        ArrayList<String> result = new ArrayList<>();
+        Collections.sort(terms);
+        
+        int count = 1;
+        for (TermEntry t : terms) {
+            
+            if (!t.getTerm().equals(userQuery)) {
+                result.add(t.getTerm());
+                count++;
+            }
+            
+            if (count == EXPANSION_SIZE) {
+                return result;
+            }
+        }
+        
+        return result;
     }
 }

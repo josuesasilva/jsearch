@@ -16,7 +16,7 @@
  */
 package br.pucminas.ri.jsearch.rest.model;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,26 +29,33 @@ public class UserSearchResponse {
     private long time;
     private boolean error;
     private String userQuery;
+    private List<TermEntry> terms;
     
     public UserSearchResponse() {
-        this.time = 0;
-        this.docs = new ArrayList<>();
-        this.error = false;
     }
 
-    public UserSearchResponse(List<SimpleDocument> docs, long time, boolean error, String userQuery) {
+    public UserSearchResponse(List<SimpleDocument> docs, long time, boolean error, String userQuery, List<TermEntry> terms) {
         this.docs = docs;
         this.time = time;
         this.error = error;
         this.userQuery = userQuery;
+        this.terms = terms;
+    }
+
+    public List<SimpleDocument> getDocs() {
+        return docs;
     }
 
     public void setDocs(List<SimpleDocument> docs) {
         this.docs = docs;
     }
-    
-    public List<SimpleDocument> getDocs() {
-        return docs;
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
     }
 
     public boolean isError() {
@@ -67,11 +74,12 @@ public class UserSearchResponse {
         this.userQuery = userQuery;
     }
 
-    public long getTime() {
-        return time;
+    public List<TermEntry> getTerms() {
+        return terms;
     }
 
-    public void setTime(long time) {
-        this.time = time;
-    }   
+    public void setTerms(List<TermEntry> terms) {
+        this.terms = terms;
+    }
+    
 }
