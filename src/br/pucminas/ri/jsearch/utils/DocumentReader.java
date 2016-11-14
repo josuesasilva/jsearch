@@ -59,17 +59,20 @@ public class DocumentReader implements Iterator<Document> {
                 sb.append(line);
             }
             if (sb.length() > 0) {
-                FieldType type = new FieldType();
-                type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
-                type.setStored(true);
-                type.setStoreTermVectors(true);
+                FieldType typeContent = new FieldType();
+                typeContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+                typeContent.setStored(true);
+                typeContent.setStoreTermVectors(true);
+                
+                FieldType typeHtml = new FieldType();
+                typeHtml.setStored(true);
                 
                 String html = sb.toString();
                 String content = HtmlParser.docToString(html);
                 String title = HtmlParser.docTitle(html);
                 
-                doc.add(new Field(Constants.DOC_HTML, html, type));
-                doc.add(new Field(Constants.DOC_CONTENT, content, type));
+                doc.add(new Field(Constants.DOC_HTML, html, typeHtml));
+                doc.add(new Field(Constants.DOC_CONTENT, content, typeContent));
                 doc.add(new StringField(Constants.DOC_TITLE, title, Field.Store.YES));
             }
 
