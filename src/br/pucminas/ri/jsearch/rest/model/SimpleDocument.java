@@ -16,6 +16,8 @@
  */
 package br.pucminas.ri.jsearch.rest.model;
 
+import java.util.HashMap;
+
 /**
  *
  * @author josue
@@ -25,16 +27,18 @@ public class SimpleDocument {
     private String title;
     private String content;
     private Integer id;
+    private HashMap<String, Float> terms;
 
     public SimpleDocument() {
         this.title = "";
         this.content = "";
     }
     
-    public SimpleDocument(Integer id, String title, String content) {
+    public SimpleDocument(Integer id, String title, String content, HashMap terms) {
         this.id = id;
         this.title = title;
         this.content = content;
+        this.terms = terms;
     }
     
     public String getTitle() {
@@ -59,5 +63,13 @@ public class SimpleDocument {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public HashMap<String, Float> getTerms() {
+        return terms;
+    }
+
+    public void setTerms(HashMap<String, Float> terms) {
+        this.terms = terms;
     }
 }

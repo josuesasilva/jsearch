@@ -22,7 +22,11 @@ import java.util.HashMap;
 import java.util.Scanner;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -31,8 +35,10 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Lock;
+import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -79,6 +85,8 @@ public class Searcher {
                 IndexSearcher indexSearcher = new IndexSearcher(indexReader);
                 PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
                 QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
+                HashMap<String, Float> termsResult = new HashMap<>();
+                ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
                 
                 indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
                 
@@ -92,9 +100,28 @@ public class Searcher {
             
                 for (ScoreDoc scoreDoc : hits) {
                     Document doc = indexSearcher.doc(scoreDoc.doc);
+                    
+                    Terms termVector = indexReader.getTermVector(scoreDoc.doc, Constants.DOC_CONTENT);
+                    PostingsEnum postings = null;
+                    TermsEnum itr = termVector.iterator();
+                    BytesRef bytesRef;
+                    
+                    while ((bytesRef = itr.next()) != null) {
+                        postings = itr.postings(postings);
+                        String termText = bytesRef.utf8ToString();
+                        
+                        while(postings.nextDoc() != PostingsEnum.NO_MORE_DOCS ) {
+                            int freq = postings.freq();
+                            float tf = sim.tf(freq);
+                            float idf = sim.idf(itr.docFreq(), indexReader.numDocs());
+                            termsResult.put(termText, tf*idf);
+                        }
+                    }
+                    
                     result.add(new SimpleDocument(scoreDoc.doc, 
                             doc.get(Constants.DOC_TITLE), 
-                            doc.get(Constants.DOC_CONTENT)));
+                            doc.get(Constants.DOC_CONTENT), 
+                            termsResult));
                 }
             }
         }

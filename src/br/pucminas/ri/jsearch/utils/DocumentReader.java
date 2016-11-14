@@ -60,9 +60,13 @@ public class DocumentReader implements Iterator<Document> {
             }
             if (sb.length() > 0) {
                 FieldType typeContent = new FieldType();
-                typeContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+                typeContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
                 typeContent.setStored(true);
                 typeContent.setStoreTermVectors(true);
+                typeContent.setStoreTermVectorOffsets(true);
+                typeContent.setStoreTermVectorPayloads(true);
+                typeContent.setStoreTermVectorPositions(true);
+                typeContent.setTokenized(true);
                 
                 FieldType typeHtml = new FieldType();
                 typeHtml.setStored(true);
