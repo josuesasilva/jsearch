@@ -16,13 +16,13 @@
  */
 package br.pucminas.ri.jsearch.queryexpansion;
 
+import br.pucminas.ri.jsearch.utils.ConcreteTFIDFSimilarity;
 import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.utils.PorterStemAnalyzer;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,18 +75,18 @@ public class RocchioQueryExpansion {
     }
 
     public QueryExpanded expandQuery(String qId, String strQuery) {
-        
+
         loadTopDocs(strQuery);
 
         try {
             Directory index = createIndex(relevatDocuments);
 
-            List<Entry<String, Double>> termsVector = getTermScoreList(index);
+            List<Entry<String, Float>> termsVector = getTermScoreList(index);
 
             for (String term : strQuery.split("\\s+")) {
-                double score = ALPHA * getScore(index, term);
+                float score = ALPHA * getScore(index, term);
                 boolean found = false;
-                for (Entry<String, Double> entry : termsVector) {
+                for (Entry<String, Float> entry : termsVector) {
                     if (entry.getKey().equalsIgnoreCase(term)) {
                         entry.setValue(entry.getValue() + score);
                         found = true;
@@ -97,21 +97,19 @@ public class RocchioQueryExpansion {
                     termsVector.add(new SimpleEntry<>(term, score));
                 }
             }
+
+            Collections.sort(termsVector, 
+                    (Entry<String, Float> o1, Entry<String, Float> o2) -> 
+                            o1.getValue().compareTo(o2.getValue()));
             
-            Collections.sort(termsVector, new Comparator<Entry<String, Double>>() {
-                @Override
-                public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-            });
             Collections.reverse(termsVector);
-            
+
             StringBuilder rocchioTerms = new StringBuilder();
-            
+
             for (int i = 0; i < TERMS_LIMIT && i < termsVector.size(); i++) {
                 rocchioTerms.append(' ').append(termsVector.get(i).getKey());
             }
-            
+
             return new QueryExpanded(qId, rocchioTerms.toString().trim());
 
         } catch (LockObtainFailedException ex) {
@@ -178,10 +176,12 @@ public class RocchioQueryExpansion {
         return index;
     }
 
-    private List<Entry<String, Double>> getTermScoreList(Directory directory)
+    private List<Entry<String, Float>> getTermScoreList(Directory directory)
             throws CorruptIndexException, IOException {
 
-        Map<String, Double> termScoreMap = new HashMap<>();
+        Map<String, Float> termScoreMap = new HashMap<>();
+
+        ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
 
         try (IndexReader idxReader = DirectoryReader.open(directory)) {
 
@@ -189,14 +189,20 @@ public class RocchioQueryExpansion {
                 try {
                     Terms terms = reader.terms(Constants.DOC_CONTENT);
                     TermsEnum termsEnum = terms.iterator();
+                    PostingsEnum postings = null;
                     int docsNum = idxReader.numDocs();
 
                     BytesRef text;
                     while ((text = termsEnum.next()) != null) {
-                        double tf = tf(termsEnum.totalTermFreq());
-                        double idf = idf(docsNum, termsEnum.docFreq());
-                        double tfidf = tf * idf;
-                        termScoreMap.put(text.utf8ToString(), BETA * tfidf);
+                        
+                        postings = termsEnum.postings(postings);
+
+                        while (postings.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+                            int freq = postings.freq();
+                            float tf = sim.tf(freq);
+                            float idf = sim.idf(termsEnum.docFreq(), indexReader.numDocs());
+                            termScoreMap.put(text.utf8ToString(), BETA * (tf*idf));
+                        }
                     }
 
                 } catch (IOException ex) {
@@ -217,10 +223,12 @@ public class RocchioQueryExpansion {
         return new ArrayList<>(termScoreMap.entrySet());
     }
 
-    private double getScore(Directory directory, String term)
+    private float getScore(Directory directory, String term)
             throws CorruptIndexException, IOException {
 
         try (IndexReader idxReader = DirectoryReader.open(directory)) {
+
+            ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
 
             for (LeafReaderContext context : idxReader.leaves()) {
                 LeafReader reader = context.reader();
@@ -228,17 +236,19 @@ public class RocchioQueryExpansion {
                 try {
                     Terms terms = reader.terms(Constants.DOC_CONTENT);
                     TermsEnum termsEnum = terms.iterator();
-                    PostingsEnum postingsEnum = termsEnum.postings(null);
-                    int docsNum = idxReader.numDocs();
+                    PostingsEnum postings = null;
 
                     BytesRef text;
                     while ((text = termsEnum.next()) != null) {
+                        postings = termsEnum.postings(postings);
                         if (text.utf8ToString().equalsIgnoreCase(term)) {
-                            double tf = tf(termsEnum.totalTermFreq());
-                            double idf = idf(docsNum, termsEnum.docFreq());
-                            double tfidf = tf * idf;
-                            idxReader.close();
-                            return tfidf;
+
+                            while (postings.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+                                int freq = postings.freq();
+                                float tf = sim.tf(freq);
+                                float idf = sim.idf(termsEnum.docFreq(), indexReader.numDocs());
+                                return tf * idf;
+                            }
                         }
                     }
 
@@ -252,12 +262,5 @@ public class RocchioQueryExpansion {
 
         return 0;
     }
-    
-    private double tf(long tfInCollection) {
-        return 1 + ((Math.log(tfInCollection) / Math.log(2)));
-    }
-    
-    private double idf(int docsSize, int docFreq) {
-        return (Math.log(docsSize/docFreq) / Math.log(2));
-    }
+
 }
