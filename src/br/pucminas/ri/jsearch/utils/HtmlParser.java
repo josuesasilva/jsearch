@@ -24,14 +24,14 @@ import org.jsoup.Jsoup;
  */
 public class HtmlParser {
 
-    public static String docToString(String doc) {
+    public static String docToString(String doc) throws Exception {
         int begin = doc.indexOf("<html>"), end = doc.indexOf("</html>");
         String string = new String();
         
         if (begin < 0 && end < 0) {
             end = doc.indexOf("</DOCHDR>");
             doc = doc.substring(end, doc.length());
-            string = Jsoup.parse(doc).text();
+            string = Jsoup.parse(doc).text();   
         } else if (begin >= 0 && end >= 0){
             string = Jsoup.parse(doc.substring(begin, end)).text();
         } else {
@@ -42,7 +42,7 @@ public class HtmlParser {
         return string;
     }
 
-    public static String docTitle(String doc) {
+    public static String docTitle(String doc) throws Exception  {
         String title = Jsoup.parse(doc).select("title").text();
 
         if (title.isEmpty()) {

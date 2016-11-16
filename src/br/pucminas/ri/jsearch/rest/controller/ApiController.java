@@ -169,7 +169,7 @@ public class ApiController {
         } catch (IOException ex) {
             res = new IndexerResponse();
             res.setError(true);
-            System.err.println(Arrays.toString(ex.getStackTrace()));
+            System.out.println(Arrays.toString(ex.getStackTrace()));
         }
 
         return res;

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Iterator;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -20,10 +19,12 @@ public class DocumentReader implements Iterator<Document> {
 
     protected BufferedReader rdr;
     protected boolean endOfFile = false;
+    protected String fileName;
 
     public DocumentReader(File file) throws FileNotFoundException {
         rdr = new BufferedReader(new FileReader(file));
-        System.out.println("Loading " + file.toString());
+        fileName = file.toString();
+        System.out.println("Loading " + fileName);
     }
 
     @Override
@@ -58,6 +59,7 @@ public class DocumentReader implements Iterator<Document> {
 
                 sb.append(line);
             }
+            
             if (sb.length() > 0) {
                 FieldType typeContent = new FieldType();
                 typeContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
@@ -72,19 +74,24 @@ public class DocumentReader implements Iterator<Document> {
                 typeHtml.setStored(true);
                 
                 String html = sb.toString();
-                String content = HtmlParser.docToString(html);
-                String title = HtmlParser.docTitle(html);
                 
-                doc.add(new Field(Constants.DOC_HTML, html, typeHtml));
-                doc.add(new Field(Constants.DOC_CONTENT, content, typeContent));
-                doc.add(new StringField(Constants.DOC_TITLE, title, Field.Store.YES));
+                try {
+                    String content = HtmlParser.docToString(html);
+                    String title = HtmlParser.docTitle(html);
+                    doc.add(new Field(Constants.DOC_HTML, html, typeHtml));
+                    doc.add(new Field(Constants.DOC_CONTENT, content, typeContent));
+                    doc.add(new StringField(Constants.DOC_TITLE, title, Field.Store.YES));   
+                } catch (Exception e) {
+                    System.out.println("Error on " + fileName);
+                }
             }
-
-        } catch (IOException e) {
+            
+            return doc;
+        } catch (Exception e) {
             doc = null;
-            System.err.println(e);
+            e.printStackTrace();
+            return doc;
         }
-        return doc;
     }
     
     @Override
