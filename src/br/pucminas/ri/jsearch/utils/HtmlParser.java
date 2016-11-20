@@ -51,4 +51,8 @@ public class HtmlParser {
 
         return title;
     }
+    
+    public static String docno(String doc) throws Exception  {
+        return Jsoup.parse(doc).select("DOCNO").text();
+    }
 }

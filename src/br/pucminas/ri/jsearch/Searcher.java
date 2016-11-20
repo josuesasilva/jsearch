@@ -243,6 +243,7 @@ public class Searcher {
         try (PrintWriter writer = new PrintWriter(outFile)) {
             queries.keySet().stream().forEach((key) -> {
                 String query = queries.get(key);
+                System.out.println(key + " " + query);
                 search(key, query, ranking, writer);
             });
             writer.close();
@@ -305,8 +306,8 @@ public class Searcher {
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = indexSearcher.doc(scoreDoc.doc);
 
-                String out = String.format("%s %s %s %d %f %s", qid, "Q0",
-                        document.get("docno"), i, hits[i].score, rankingName);
+                String out = String.format("%s %s %s %d %f %s", qid, "Q0", 
+                        document.get(Constants.DOCNO), i, hits[i].score, rankingName);
 
                 if (writer != null) {
                     writer.println(out);

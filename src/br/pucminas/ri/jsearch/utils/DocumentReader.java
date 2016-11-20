@@ -78,9 +78,11 @@ public class DocumentReader implements Iterator<Document> {
                 try {
                     String content = HtmlParser.docToString(html);
                     String title = HtmlParser.docTitle(html);
+                    String docno = HtmlParser.docno(html);
                     doc.add(new Field(Constants.DOC_HTML, html, typeHtml));
                     doc.add(new Field(Constants.DOC_CONTENT, content, typeContent));
                     doc.add(new StringField(Constants.DOC_TITLE, title, Field.Store.YES));   
+                    doc.add(new StringField(Constants.DOCNO, docno, Field.Store.YES));   
                 } catch (Exception e) {
                     System.out.println("Error on " + fileName);
                 }
