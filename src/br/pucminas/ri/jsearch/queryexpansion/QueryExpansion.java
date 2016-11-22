@@ -44,7 +44,7 @@ public class QueryExpansion {
     
     private static SynonymMap map;
     
-    private static final int EXPANSION_SIZE = 5;
+    private static final int EXPANSION_SIZE = 10;
     
     public QueryExpansion(String qid, String query) {
         userQuery = query;
@@ -63,6 +63,9 @@ public class QueryExpansion {
         Query query = null;
         
         try {
+
+            if (userQuery.split(" ").length < 2) return queryParser.parse(userQuery);
+
             userQuery = getTopTerms(userQuery, terms).stream().map((term) -> " " + term)
                     .reduce(userQuery, String::concat);
             userQuery = userQuery.trim();
@@ -167,17 +170,18 @@ public class QueryExpansion {
         ArrayList<String> result = new ArrayList<>();
         Collections.sort(terms);
         
-        int count = 1;
+        int count = 0;
         for (TermEntry t : terms) {
-            
-            if (!t.getTerm().equals(userQuery)) {
-                result.add(t.getTerm());
-                count++;
-            }
             
             if (count == EXPANSION_SIZE) {
                 return result;
             }
+            
+            if (!result.contains(t.getTerm()) && !userQuery.contains(t.getTerm())) {
+                result.add(t.getTerm());
+                count++;
+            }
+            
         }
         
         return result;

@@ -3,7 +3,6 @@ package br.pucminas.ri.jsearch;
 import br.pucminas.ri.jsearch.utils.RankingEnum;
 import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
-import br.pucminas.ri.jsearch.queryexpansion.QueryExpanded;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
 import br.pucminas.ri.jsearch.rest.model.SimpleDocument;
 import br.pucminas.ri.jsearch.rest.model.TermEntry;
@@ -164,7 +163,7 @@ public class Searcher {
                 IndexSearcher indexSearcher = new IndexSearcher(indexReader);
                 ConcreteTFIDFSimilarity sim = new ConcreteTFIDFSimilarity();
                 
-                indexSearcher.setSimilarity(new BM25Similarity(1.2f, 0.75f));
+                indexSearcher.setSimilarity(sim);
                 
                 start = new Date();
                 
@@ -188,6 +187,7 @@ public class Searcher {
                             int freq = postings.freq();
                             float tf = sim.tf(freq);
                             float idf = sim.idf(itr.docFreq(), indexReader.numDocs());
+                            
                             termsResult.add(new TermEntry(termText, tf*idf));
                         }
                     }
@@ -291,6 +291,7 @@ public class Searcher {
                     break;
                 case QUERY_EXPANSION:
                     rankingName = "QueryExpansion";
+                    indexSearcher.setSimilarity(new ConcreteTFIDFSimilarity());
                     query = queryParser.parse(text);
                     UserSearchResponse res = search(query);
                     query = QueryExpansion.expandQuery(text, res.getTerms());
@@ -299,7 +300,7 @@ public class Searcher {
                     break;
             }
 
-            TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
+            TopDocs topDocs = indexSearcher.search(query, 1000);
             ScoreDoc[] hits = topDocs.scoreDocs;
 
             int i = 0;

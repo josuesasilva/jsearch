@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.LowerCaseTokenizer;
 import org.apache.lucene.analysis.core.StopFilter;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.en.PorterStemFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.util.CharArraySet;
 
@@ -73,11 +74,11 @@ public class PorterStemAnalyzer extends Analyzer {
     @Override
     protected TokenStreamComponents createComponents(String string) {
         Reader reader = new StringReader(string);
-        EnglishAnalyzer analyser = new EnglishAnalyzer();
         LowerCaseTokenizer source = new LowerCaseTokenizer();
         source.setReader(reader);
         StopFilter filter = new StopFilter(source, stopWords);
-        return new TokenStreamComponents(source, filter);
+        PorterStemFilter stem = new PorterStemFilter(filter);
+        return new TokenStreamComponents(source, stem);
     }
     
 }

@@ -18,6 +18,7 @@ package br.pucminas.ri.jsearch.rest.model;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -73,5 +74,19 @@ public class TermEntry implements Map.Entry<String, Float> , Comparable<Map.Entr
     @Override
     public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
         return o2.getValue().compareTo(o1.getValue());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        TermEntry  out = (TermEntry) obj;
+        return this.term.equals(out.getTerm());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 89 * hash + Objects.hashCode(this.term);
+        hash = 89 * hash + Objects.hashCode(this.tfidf);
+        return hash;
     }
 }
