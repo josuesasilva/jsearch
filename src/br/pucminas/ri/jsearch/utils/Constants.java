@@ -9,7 +9,7 @@ public class Constants {
     public static final String INDEX_PATH = "index";
     public static String DOCS_PATH = "data";
     public static String RESULT_PATH = "release";    
-    public static int MAX_SEARCH = 10;
+    public static int MAX_SEARCH = 50;
     public static final String LOCK = "LOCK";
     public static final String FILE_NAME = "filename";
     public static final String FILE_PATH = "filepath";

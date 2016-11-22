@@ -179,7 +179,8 @@ public class ApiController {
         UserSearchResponse userRes;
 
         try {
-            userRes = Searcher.performUserQuery(req.queryParams("query"));
+            userRes = Searcher.performUserQuery(req.queryParams("query"), 
+                    Integer.parseInt(req.queryParams("page")));;
         } catch (IOException | ParseException ex) {
             userRes = new UserSearchResponse();
             userRes.setError(true);

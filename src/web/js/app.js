@@ -189,9 +189,15 @@ $(document).ready(function () {
 	}
 
 	function loadData(query, page) {
+		$("#results").empty();
+
+		showLoading("Carregando...");
+
 		$.get(endPointSearch + query + "&page=" + page, function (data) {
 			data = JSON.parse(data);
 			console.log(data);
+
+			hideLoading();
 
 			if (data.docs !== undefined) {
 				data.docs.forEach(function (value) {

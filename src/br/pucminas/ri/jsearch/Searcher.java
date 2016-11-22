@@ -70,18 +70,18 @@ public class Searcher {
         return html;
     }
     
-    public static UserSearchResponse performUserQuery(String userQuery) throws IOException, ParseException {
+    public static UserSearchResponse performUserQuery(String userQuery, Integer page) throws IOException, ParseException {
         UserSearchResponse result;
         PorterStemAnalyzer analyzer = new PorterStemAnalyzer();
         QueryParser queryParser = new QueryParser(Constants.DOC_CONTENT, analyzer);
         
         Query query = queryParser.parse(userQuery);
         
-        UserSearchResponse firstTesult = search(query, userQuery);
+        UserSearchResponse firstTesult = search(query, userQuery, 1);
         
         Query newQuery = QueryExpansion.expandQuery(userQuery, firstTesult.getTerms());
         
-        result = search(newQuery,userQuery);
+        result = search(newQuery,userQuery, page);
         
         return result;
     }
@@ -147,7 +147,7 @@ public class Searcher {
         return new HashMap<>();
     }
     
-    private static UserSearchResponse search(Query query, String queryString) throws IOException, ParseException {
+    private static UserSearchResponse search(Query query, String queryString, Integer page) throws IOException, ParseException {
         UserSearchResponse res;
         Lock lock;
         
@@ -173,8 +173,22 @@ public class Searcher {
                 ScoreDoc[] hits = topDocs.scoreDocs;
                 result = new ArrayList<>();
                 float boost = 1.0f;
+                
+                int begin = page*10 - 10;
+                int end = page*10;
+                int count = 0;
             
                 for (ScoreDoc scoreDoc : hits) {
+                    
+                    if (count < begin) {
+                        count++;
+                        continue;
+                    }
+                    
+                    if (begin == end) break;
+                    
+                    begin++;
+                    
                     Document doc = indexSearcher.doc(scoreDoc.doc);
                     
                     Terms termVector = indexReader.getTermVector(scoreDoc.doc, Constants.DOC_CONTENT);
@@ -183,7 +197,7 @@ public class Searcher {
                     BytesRef bytesRef;
                     
                     if (log.contains(scoreDoc.doc, log.getAllLike(queryString))) {
-                        boost = 1.2f;
+                        boost = 1.0f;
                     } else {
                         boost = 1.0f;
                     }
@@ -309,7 +323,7 @@ public class Searcher {
                     rankingName = "QueryExpansion";
                     indexSearcher.setSimilarity(new ConcreteTFIDFSimilarity());
                     query = queryParser.parse(text);
-                    UserSearchResponse res = search(query, text);
+                    UserSearchResponse res = search(query, text, 1);
                     query = QueryExpansion.expandQuery(text, res.getTerms());
                     break;
                 default:
