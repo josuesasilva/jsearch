@@ -13,3 +13,7 @@
   display: flex;
   align-items: center;
 }
+
+.nav-bottom {
+	text-align: center;
+}
