@@ -63,9 +63,6 @@ public class QueryExpansion {
         Query query = null;
         
         try {
-
-            if (userQuery.split(" ").length < 2) return queryParser.parse(userQuery);
-
             userQuery = getTopTerms(userQuery, terms).stream().map((term) -> " " + term)
                     .reduce(userQuery, String::concat);
             userQuery = userQuery.trim();

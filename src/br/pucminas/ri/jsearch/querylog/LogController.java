@@ -16,8 +16,10 @@
  */
 package br.pucminas.ri.jsearch.querylog;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -65,5 +67,24 @@ public class LogController {
         List<Log> result = query.getResultList();
         closeConnection();
         return result;
+    }
+    
+    synchronized public List<Log> getAllLike(String query) {
+        List<Log> all = getAll();
+        ArrayList<Log> result = new ArrayList<>();
+        
+        all.stream().filter((l) -> (StringUtils.getJaroWinklerDistance(query, 
+                l.getQuery()) >= 0.80)).forEachOrdered((l) -> {
+            result.add(l);
+        });
+  
+        return result;
+    }
+    
+    synchronized public boolean contains(int  docId, List<Log> logs) {
+        
+        if (logs == null) return false;
+        
+        return logs.stream().anyMatch((l) -> (l.getDocId().equals(String.valueOf(docId))));
     }
 }

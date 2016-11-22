@@ -4,6 +4,7 @@ import br.pucminas.ri.jsearch.utils.RankingEnum;
 import br.pucminas.ri.jsearch.utils.Constants;
 import br.pucminas.ri.jsearch.queryexpansion.RocchioQueryExpansion;
 import br.pucminas.ri.jsearch.queryexpansion.QueryExpansion;
+import br.pucminas.ri.jsearch.querylog.LogController;
 import br.pucminas.ri.jsearch.rest.model.SimpleDocument;
 import br.pucminas.ri.jsearch.rest.model.TermEntry;
 import br.pucminas.ri.jsearch.rest.model.UserSearchResponse;
@@ -76,11 +77,11 @@ public class Searcher {
         
         Query query = queryParser.parse(userQuery);
         
-        UserSearchResponse firstTesult = search(query);
+        UserSearchResponse firstTesult = search(query, userQuery);
         
         Query newQuery = QueryExpansion.expandQuery(userQuery, firstTesult.getTerms());
         
-        result = search(newQuery);
+        result = search(newQuery,userQuery);
         
         return result;
     }
@@ -146,7 +147,7 @@ public class Searcher {
         return new HashMap<>();
     }
     
-    private static UserSearchResponse search(Query query) throws IOException, ParseException {
+    private static UserSearchResponse search(Query query, String queryString) throws IOException, ParseException {
         UserSearchResponse res;
         Lock lock;
         
@@ -154,6 +155,7 @@ public class Searcher {
         Date start;
         ArrayList<SimpleDocument> result;
         List<TermEntry> termsResult = new ArrayList<>();
+        LogController log = new LogController();
         
         try (Directory directory = FSDirectory.open(path)) {
             lock = directory.obtainLock(Constants.LOCK);
@@ -170,6 +172,7 @@ public class Searcher {
                 TopDocs topDocs = indexSearcher.search(query, Constants.MAX_SEARCH);
                 ScoreDoc[] hits = topDocs.scoreDocs;
                 result = new ArrayList<>();
+                float boost = 1.0f;
             
                 for (ScoreDoc scoreDoc : hits) {
                     Document doc = indexSearcher.doc(scoreDoc.doc);
@@ -178,6 +181,12 @@ public class Searcher {
                     PostingsEnum postings = null;
                     TermsEnum itr = termVector.iterator();
                     BytesRef bytesRef;
+                    
+                    if (log.contains(scoreDoc.doc, log.getAllLike(queryString))) {
+                        boost = 1.2f;
+                    } else {
+                        boost = 1.0f;
+                    }
                     
                     while ((bytesRef = itr.next()) != null) {
                         postings = itr.postings(postings);
@@ -188,7 +197,14 @@ public class Searcher {
                             float tf = sim.tf(freq);
                             float idf = sim.idf(itr.docFreq(), indexReader.numDocs());
                             
-                            termsResult.add(new TermEntry(termText, tf*idf));
+                            String title = doc.get(Constants.DOC_TITLE);
+                            if (title != null && !title.isEmpty() && 
+                                    title.toLowerCase()
+                                            .contains(termText.toLowerCase())) {
+                                termsResult.add(new TermEntry(termText, tf*idf*1.2f*boost));
+                            } else {
+                                termsResult.add(new TermEntry(termText, tf*idf*boost));
+                            }
                         }
                     }
                     
@@ -293,7 +309,7 @@ public class Searcher {
                     rankingName = "QueryExpansion";
                     indexSearcher.setSimilarity(new ConcreteTFIDFSimilarity());
                     query = queryParser.parse(text);
-                    UserSearchResponse res = search(query);
+                    UserSearchResponse res = search(query, text);
                     query = QueryExpansion.expandQuery(text, res.getTerms());
                     break;
                 default:
